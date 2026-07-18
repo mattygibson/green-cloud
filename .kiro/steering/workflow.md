@@ -21,10 +21,19 @@
 - **Never commit directly to `main`** — all work goes through a feature branch
 - Create a branch for each issue before starting work: `<type>/<issue-number>-<short-description>`
   - Examples: `feature/2-compose-stacks`, `infra/3-local-registry`, `docs/11-add-runbook`
-- When work is complete, merge the branch to `main` via PR (or direct merge if no review is needed)
+- When work is complete, merge the branch to `main` via PR
 - The PR/merge commit should reference the issue: `Closes #<number>`
 - Delete the branch after merging
 - Branch naming types: `feature/`, `fix/`, `infra/`, `docs/`, `refactor/`, `test/`
+
+## Pull Request Conventions (HARD RULE — never deviate)
+
+Every PR MUST have:
+- **Label:** `KIRO` — to indicate it was raised through Kiro
+- **Assignee:** `mattygibson`
+- **Reviewer:** `mattygibson`
+- **Project:** Add to the `Green Cloud` project (if GitHub Projects API supports it)
+- **Body:** Must reference the issue with `Closes #<number>`
 
 ## Code Changes
 
