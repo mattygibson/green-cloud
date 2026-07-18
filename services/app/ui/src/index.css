@@ -1,0 +1,100 @@
+:root {
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background-color: #f8f9fa;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 480px;
+  width: 100%;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.25rem;
+  color: #16a34a;
+}
+
+.subtitle {
+  color: #6b7280;
+  margin-bottom: 2rem;
+}
+
+.status {
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: left;
+}
+
+.status.loading {
+  color: #6b7280;
+}
+
+.status.error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.status.error code {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.status.healthy {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.status.unhealthy {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.status-row:last-child {
+  border-bottom: none;
+}
+
+.label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.value.connected,
+.value.healthy {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.value.disconnected,
+.value.unhealthy {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.value.env {
+  font-family: monospace;
+  background: #e5e7eb;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}

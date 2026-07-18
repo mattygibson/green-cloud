@@ -1,0 +1,72 @@
+services:
+  dev-db:
+    image: postgres:16-alpine
+    container_name: dev-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DEV_DB_NAME:-greencloud_dev}
+      POSTGRES_USER: ${DEV_DB_USER:-greencloud}
+      POSTGRES_PASSWORD: ${DEV_DB_PASSWORD:-changeme_dev}
+    volumes:
+      - dev-db-data:/var/lib/postgresql/data
+      - ../services/app/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5433:5432"
+    networks:
+      - dev-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DEV_DB_USER:-greencloud}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  dev-api:
+    container_name: dev-api
+    build:
+      context: ../services/app/api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${DEV_DB_USER:-greencloud}:${DEV_DB_PASSWORD:-changeme_dev}@dev-db:5432/${DEV_DB_NAME:-greencloud_dev}
+      ENVIRONMENT: development
+    volumes:
+      - ../services/app/api/app:/app/app:ro
+    depends_on:
+      dev-db:
+        condition: service_healthy
+    ports:
+      - "8001:8000"
+    networks:
+      - dev-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dev-api.rule=Host(`dev.app.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.dev-api.entrypoints=web"
+      - "traefik.http.services.dev-api.loadbalancer.server.port=8000"
+      - "traefik.http.routers.dev-health.rule=Host(`dev.app.localhost`) && Path(`/health`)"
+      - "traefik.http.routers.dev-health.entrypoints=web"
+      - "traefik.http.routers.dev-health.service=dev-api"
+
+  dev-ui:
+    container_name: dev-ui
+    build:
+      context: ../services/app/ui
+    restart: unless-stopped
+    depends_on:
+      - dev-api
+    ports:
+      - "3001:80"
+    networks:
+      - dev-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dev-ui.rule=Host(`dev.app.localhost`)"
+      - "traefik.http.routers.dev-ui.entrypoints=web"
+      - "traefik.http.routers.dev-ui.priority=1"
+      - "traefik.http.services.dev-ui.loadbalancer.server.port=80"
+
+volumes:
+  dev-db-data:
+
+networks:
+  dev-net:
+    name: greencloud-dev

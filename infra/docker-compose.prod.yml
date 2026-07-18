@@ -1,0 +1,83 @@
+services:
+  prod-db:
+    image: postgres:16-alpine
+    container_name: prod-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PROD_DB_NAME:-greencloud_prod}
+      POSTGRES_USER: ${PROD_DB_USER:-greencloud}
+      POSTGRES_PASSWORD: ${PROD_DB_PASSWORD:-changeme_prod}
+    volumes:
+      - prod-db-data:/var/lib/postgresql/data
+      - ../services/app/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - prod-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PROD_DB_USER:-greencloud}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  prod-api:
+    container_name: prod-api
+    build:
+      context: ../services/app/api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${PROD_DB_USER:-greencloud}:${PROD_DB_PASSWORD:-changeme_prod}@prod-db:5432/${PROD_DB_NAME:-greencloud_prod}
+      ENVIRONMENT: production
+    depends_on:
+      prod-db:
+        condition: service_healthy
+    networks:
+      - prod-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prod-api.rule=Host(`app.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.prod-api.entrypoints=web"
+      - "traefik.http.services.prod-api.loadbalancer.server.port=8000"
+      - "traefik.http.routers.prod-health.rule=Host(`app.localhost`) && Path(`/health`)"
+      - "traefik.http.routers.prod-health.entrypoints=web"
+      - "traefik.http.routers.prod-health.service=prod-api"
+
+  prod-ui:
+    container_name: prod-ui
+    build:
+      context: ../services/app/ui
+    restart: unless-stopped
+    depends_on:
+      - prod-api
+    networks:
+      - prod-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prod-ui.rule=Host(`app.localhost`) && PathPrefix(`/`)"
+      - "traefik.http.routers.prod-ui.entrypoints=web"
+      - "traefik.http.routers.prod-ui.priority=1"
+      - "traefik.http.services.prod-ui.loadbalancer.server.port=80"
+
+  traefik:
+    image: traefik:v2.11
+    container_name: greencloud-traefik
+    restart: unless-stopped
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=greencloud-prod"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - prod-net
+
+volumes:
+  prod-db-data:
+
+networks:
+  prod-net:
+    name: greencloud-prod
