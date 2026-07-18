@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Reference task plan before implementation",
+      "trigger": "SessionStart",
+      "description": "Reminds to check the task plan before writing code to stay aligned with the implementation plan",
+      "action": {
+        "type": "agent",
+        "prompt": "Before implementing any code changes, check the relevant task file in .kiro/plans/ to ensure the work aligns with the planned approach. Reference the specific task number and step being worked on."
+      }
+    }
+  ]
+}

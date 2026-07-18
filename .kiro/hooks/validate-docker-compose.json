@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Validate Docker Compose on save",
+      "trigger": "PostFileSave",
+      "description": "Validates Docker Compose files when they are saved to catch syntax errors early",
+      "matcher": "docker-compose.*\\\\.yml$",
+      "action": {
+        "type": "command",
+        "command": "docker compose -f \"$KIRO_FILE_PATH\" config --quiet 2>&1 || echo \"WARNING: Docker Compose validation failed\""
+      }
+    }
+  ]
+}
