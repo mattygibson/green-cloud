@@ -1,0 +1,25 @@
+services:
+  registry:
+    image: registry:2
+    container_name: greencloud-registry
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry-data:/var/lib/registry
+    environment:
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+    networks:
+      - infra-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://127.0.0.1:5000/v2/ || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  registry-data:
+
+networks:
+  infra-net:
+    name: greencloud-infra
