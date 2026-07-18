@@ -49,3 +49,6 @@ htmlcov/
 
 # Build artifacts
 *.tar.gz
+
+# Local connection details (contains credentials)
+local-connections.txt
