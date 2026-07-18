@@ -13,8 +13,9 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Create non-root user
-RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+# Create non-root user and data directory
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser \
+    && mkdir -p /app/data && chown appuser:appgroup /app/data
 
 # Copy installed packages from builder
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages

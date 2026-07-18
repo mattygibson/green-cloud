@@ -17,8 +17,29 @@ services:
       timeout: 3s
       retries: 3
 
+  greencloud-api:
+    container_name: greencloud-api
+    build:
+      context: ../services/greencloud-api
+    restart: unless-stopped
+    environment:
+      GREENCLOUD_REGISTRY_HOST: greencloud-registry:5000
+      GREENCLOUD_GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET:-changeme}
+      GREENCLOUD_BUILD_PLATFORM: ${BUILD_PLATFORM:-linux/amd64}
+      GREENCLOUD_DATABASE_URL: sqlite:///./data/greencloud.db
+    volumes:
+      - greencloud-api-data:/app/data
+    ports:
+      - "8000:8000"
+    depends_on:
+      registry:
+        condition: service_healthy
+    networks:
+      - infra-net
+
 volumes:
   registry-data:
+  greencloud-api-data:
 
 networks:
   infra-net:
