@@ -15,6 +15,8 @@ This steering file defines engineering best practices for the GreenCloud project
 - Pin base image versions (e.g., `python:3.12-slim`, not `python:latest`)
 - Order Dockerfile instructions from least to most frequently changing (maximise layer caching)
 - Copy dependency files first, install, then copy source code
+- Use `uv` for Python dependency installation in Docker (faster than pip)
+- Copy `uv` from `ghcr.io/astral-sh/uv:latest` in builder stage
 - Use `.dockerignore` to keep images small (exclude `.git`, `node_modules`, `__pycache__`, tests)
 - Set explicit `EXPOSE` ports for documentation
 - Use `HEALTHCHECK` in every Dockerfile — don't rely on container "running" as healthy

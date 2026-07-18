@@ -1,0 +1,5 @@
+UI: http://app.localhost
+API Health: http://app.localhost/health
+API Items: http://app.localhost/api/v1/items
+API Docs (Swagger): http://app.localhost/docs
+Traefik Dashboard: http://localhost:8080
