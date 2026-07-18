@@ -5,8 +5,8 @@ WORKDIR /app
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-COPY pyproject.toml .
-RUN uv pip install --system --no-cache .
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-editable
 
 # Stage 2: Runtime
 FROM python:3.12-slim
@@ -16,9 +16,9 @@ WORKDIR /app
 # Create non-root user
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
-# Copy installed packages from builder
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Copy virtual environment from builder
+COPY --from=builder /app/.venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy application code
 COPY app/ ./app/
