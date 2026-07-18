@@ -37,6 +37,26 @@ services:
     networks:
       - infra-net
 
+  greencloud-agent:
+    container_name: greencloud-agent
+    build:
+      context: ../services/agent
+    restart: unless-stopped
+    environment:
+      AGENT_REGISTRY_HOST: greencloud-registry:5000
+      AGENT_GREENCLOUD_API_URL: http://greencloud-api:8000
+      AGENT_COMPOSE_PROJECT_DIR: /infra
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../infra:/infra:ro
+    ports:
+      - "8001:8000"
+    depends_on:
+      registry:
+        condition: service_healthy
+    networks:
+      - infra-net
+
 volumes:
   registry-data:
   greencloud-api-data:
