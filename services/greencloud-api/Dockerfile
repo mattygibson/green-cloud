@@ -13,9 +13,14 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Create non-root user and data directory
-RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser \
-    && mkdir -p /app/data && chown appuser:appgroup /app/data
+# Install Docker CLI (needed for buildx commands)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl && \
+    curl -fsSL https://get.docker.com | sh && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create data directory
+RUN mkdir -p /app/data
 
 # Copy virtual environment from builder
 COPY --from=builder /app/.venv /app/.venv
@@ -23,9 +28,6 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy application code
 COPY app/ ./app/
-
-# Switch to non-root user
-USER appuser
 
 EXPOSE 8000
 
