@@ -1,0 +1,22 @@
+# GreenCloud App Configuration — React + Vite Template
+# Rename and adjust for your app.
+
+name: my-react-app
+description: A React frontend application
+
+services:
+  ui:
+    context: .
+    port: 80
+    health_check: /
+    environment:
+      - VITE_API_URL=/api
+    resources:
+      memory: 64MB
+      cpu: 0.1
+
+routing:
+  subdomain: my-react-app
+  rules:
+    - path_prefix: /
+      service: ui

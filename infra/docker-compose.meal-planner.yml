@@ -1,0 +1,73 @@
+# ---------------------------------------------------------------
+# Meal Planner — External App Deployment
+# Example of a third-party app running on GreenCloud PaaS
+#
+# Usage:
+#   docker compose -f docker-compose.meal-planner.yml up --build -d
+#
+# Requires:
+#   - greencloud-prod network (created by docker-compose.infra.yml)
+#   - Traefik running (from docker-compose.infra.yml)
+# ---------------------------------------------------------------
+
+services:
+  meal-planner-api:
+    container_name: meal-planner-api
+    build:
+      context: ../../Meal-Planner/backend
+    restart: unless-stopped
+    environment:
+      PYTHONUNBUFFERED: "1"
+    mem_limit: 128m
+    cpus: 0.25
+    networks:
+      - greencloud-prod
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=greencloud-prod"
+      # API routes: meal-planner.${DOMAIN}/api/*
+      - "traefik.http.routers.meal-planner-api.rule=Host(`meal-planner.${DOMAIN:-localhost}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.meal-planner-api.entrypoints=web"
+      - "traefik.http.services.meal-planner-api.loadbalancer.server.port=8000"
+      # Strip /api prefix so backend receives clean paths
+      - "traefik.http.middlewares.meal-planner-strip.stripprefix.prefixes=/api"
+      - "traefik.http.routers.meal-planner-api.middlewares=meal-planner-strip"
+      # Health check route
+      - "traefik.http.routers.meal-planner-health.rule=Host(`meal-planner.${DOMAIN:-localhost}`) && Path(`/health`)"
+      - "traefik.http.routers.meal-planner-health.entrypoints=web"
+      - "traefik.http.routers.meal-planner-health.service=meal-planner-api"
+
+  meal-planner-ui:
+    container_name: meal-planner-ui
+    build:
+      context: ../../Meal-Planner/frontend
+    restart: unless-stopped
+    environment:
+      # Points frontend API calls to the backend via Traefik
+      VITE_API_URL: "/api"
+    mem_limit: 64m
+    cpus: 0.1
+    depends_on:
+      meal-planner-api:
+        condition: service_healthy
+    networks:
+      - greencloud-prod
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=greencloud-prod"
+      # UI routes: meal-planner.${DOMAIN}/*
+      - "traefik.http.routers.meal-planner-ui.rule=Host(`meal-planner.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.meal-planner-ui.entrypoints=web"
+      - "traefik.http.routers.meal-planner-ui.priority=1"
+      - "traefik.http.services.meal-planner-ui.loadbalancer.server.port=80"
+
+networks:
+  greencloud-prod:
+    name: greencloud-prod
+    external: true
