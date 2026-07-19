@@ -5,6 +5,9 @@ class Settings(BaseSettings):
     # Application
     environment: str = "development"
 
+    # Domain
+    domain: str = "green-cloud.uk"
+
     # GitHub webhook
     github_webhook_secret: str = "changeme"
 

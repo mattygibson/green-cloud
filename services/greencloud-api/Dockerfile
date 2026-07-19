@@ -13,14 +13,14 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install Docker CLI (needed for buildx commands)
+# Install Docker CLI (needed for buildx commands) and git (needed for repo cloning)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl && \
+    curl git && \
     curl -fsSL https://get.docker.com | sh && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Create data directory
-RUN mkdir -p /app/data
+# Create data and workspace directories
+RUN mkdir -p /app/data /app/workspaces
 
 # Copy virtual environment from builder
 COPY --from=builder /app/.venv /app/.venv
