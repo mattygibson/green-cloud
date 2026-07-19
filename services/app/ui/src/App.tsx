@@ -117,7 +117,15 @@ function InternalBadge() {
   );
 }
 
-// Determine carbon API URL based on current hostname
+// Determine URLs based on current hostname
+function getBaseUrl(): string {
+  const host = window.location.hostname;
+  if (host === "app.localhost" || host === "localhost") {
+    return "http://localhost";
+  }
+  return "https://green-cloud.uk";
+}
+
 function getCarbonUrl(): string {
   const host = window.location.hostname;
   if (host === "app.localhost" || host === "localhost") {
@@ -135,7 +143,6 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch health
     fetch("/health")
       .then((res) => res.json())
       .then((data: HealthStatus) => {
@@ -147,19 +154,16 @@ function App() {
         setLoading(false);
       });
 
-    // Fetch system stats
     fetch("/api/v1/stats")
       .then((res) => res.json())
       .then((data: SystemStats) => setStats(data))
       .catch(() => {});
 
-    // Fetch carbon status directly from carbon engine
     fetch(getCarbonUrl())
       .then((res) => res.json())
       .then((data: CarbonStatus) => setCarbon(data))
       .catch(() => {});
 
-    // Check health of each service
     SERVICES.forEach((service, index) => {
       if (!service.healthUrl) return;
       fetch(service.healthUrl, { mode: "no-cors" })
@@ -186,6 +190,9 @@ function App() {
   return (
     <div className="dashboard">
       <header className="header">
+        <a href={getBaseUrl()} className="logo-link">
+          <span className="logo">&#127793;</span>
+        </a>
         <h1>GreenCloud</h1>
         <p className="subtitle">Carbon-aware self-hosted PaaS</p>
       </header>
