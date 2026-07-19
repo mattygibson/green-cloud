@@ -33,6 +33,7 @@ services:
       - prod-net
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=greencloud-prod"
       - "traefik.http.routers.prod-api.rule=Host(`app.${DOMAIN:-localhost}`) && PathPrefix(`/api`)"
       - "traefik.http.routers.prod-api.entrypoints=web"
       - "traefik.http.services.prod-api.loadbalancer.server.port=8000"
@@ -51,6 +52,7 @@ services:
       - prod-net
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=greencloud-prod"
       - "traefik.http.routers.prod-ui.rule=Host(`app.${DOMAIN:-localhost}`) && PathPrefix(`/`)"
       - "traefik.http.routers.prod-ui.entrypoints=web"
       - "traefik.http.routers.prod-ui.priority=1"
