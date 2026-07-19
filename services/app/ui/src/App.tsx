@@ -108,6 +108,15 @@ function StatusDot({ status }: { status: string }) {
   );
 }
 
+// Determine carbon API URL based on current hostname
+function getCarbonUrl(): string {
+  const host = window.location.hostname;
+  if (host === "app.localhost" || host === "localhost") {
+    return "http://carbon.localhost/carbon/status";
+  }
+  return "https://carbon.green-cloud.uk/carbon/status";
+}
+
 function App() {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [stats, setStats] = useState<SystemStats | null>(null);
@@ -128,14 +137,14 @@ function App() {
         setLoading(false);
       });
 
-    // Fetch system stats from agent
+    // Fetch system stats
     fetch("/api/v1/stats")
       .then((res) => res.json())
       .then((data: SystemStats) => setStats(data))
       .catch(() => {});
 
-    // Fetch carbon status
-    fetch("/api/v1/carbon")
+    // Fetch carbon status directly from carbon engine
+    fetch(getCarbonUrl())
       .then((res) => res.json())
       .then((data: CarbonStatus) => setCarbon(data))
       .catch(() => {});
@@ -193,7 +202,7 @@ function App() {
           <div className="stat-card">
             <div className="stat-label">Carbon</div>
             <div className={`stat-value carbon-${carbon?.status || "unknown"}`}>
-              {carbon
+              {carbon && carbon.status !== "unknown"
                 ? `${carbon.carbon_intensity_gco2_kwh.toFixed(0)} gCO\u2082/kWh (${carbon.status.toUpperCase()})`
                 : "--"}
             </div>
