@@ -16,7 +16,6 @@ providers:
   docker:
     endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
-    network: greencloud-infra
     watch: true
   file:
     directory: /etc/traefik/dynamic
