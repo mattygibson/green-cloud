@@ -12,7 +12,8 @@ Step-by-step record of how green-cloud.uk was set up with Cloudflare Tunnel.
 ## Public URLs
 
 | URL | Service |
-|-----|---------|
+|-----|--------|
+| `https://green-cloud.uk` | Landing page (links to all services) |
 | `https://app.green-cloud.uk` | Production app (React UI + FastAPI) |
 | `https://grafana.green-cloud.uk` | Grafana dashboards |
 | `https://carbon.green-cloud.uk` | Carbon Engine API |
@@ -47,7 +48,8 @@ Step-by-step record of how green-cloud.uk was set up with Cloudflare Tunnel.
 In the tunnel config → Public Hostname tab, added entries one at a time:
 
 | Subdomain | Domain | Service |
-|-----------|--------|---------|
+|-----------|--------|--------|
+| *(empty)* | `green-cloud.uk` | `http://greencloud-traefik:80` |
 | `app` | `green-cloud.uk` | `http://greencloud-traefik:80` |
 | `grafana` | `green-cloud.uk` | `http://greencloud-traefik:80` |
 | `carbon` | `green-cloud.uk` | `http://greencloud-traefik:80` |

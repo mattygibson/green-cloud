@@ -131,7 +131,6 @@ services:
       - "traefik.http.routers.dashboard.service=api@internal"
 
   # --- Cloudflare Tunnel (disabled by default) ---
-  # Uncomment or set CLOUDFLARE_TUNNEL_TOKEN in .env to enable
 
   cloudflared:
     image: cloudflare/cloudflared:latest
