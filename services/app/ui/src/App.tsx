@@ -15,6 +15,19 @@ interface Service {
   internal: boolean;
 }
 
+interface UserApp {
+  name: string;
+  url: string;
+  health_url: string;
+  status: string;
+  container_name: string;
+}
+
+interface AppsResponse {
+  apps: UserApp[];
+  count: number;
+}
+
 interface SystemStats {
   cpu_percent: number | null;
   memory: {
@@ -139,6 +152,7 @@ function App() {
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [carbon, setCarbon] = useState<CarbonStatus | null>(null);
   const [services, setServices] = useState<Service[]>(SERVICES);
+  const [userApps, setUserApps] = useState<UserApp[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -162,6 +176,15 @@ function App() {
     fetch(getCarbonUrl())
       .then((res) => res.json())
       .then((data: CarbonStatus) => setCarbon(data))
+      .catch(() => {});
+
+    // Fetch running user apps
+    const apiBase = window.location.hostname.includes("localhost")
+      ? "http://api.localhost"
+      : "https://api.green-cloud.uk";
+    fetch(`${apiBase}/api/v1/apps`)
+      .then((res) => res.json())
+      .then((data: AppsResponse) => setUserApps(data.apps))
       .catch(() => {});
 
     SERVICES.forEach((service, index) => {
@@ -249,6 +272,37 @@ function App() {
           </div>
         </div>
       </section>
+
+      {/* User Apps */}
+      {userApps.length > 0 && (
+        <section className="section">
+          <h2>Hosted Applications</h2>
+          <div className="services-list">
+            {userApps.map((app) => (
+              <div key={app.container_name} className="service-row app-row">
+                <div className="service-info">
+                  <StatusDot status={app.status} />
+                  <div>
+                    <div className="service-name">{app.name}</div>
+                    <div className="service-desc">{app.container_name}</div>
+                  </div>
+                </div>
+                <div className="service-meta">
+                  <span className="app-badge">App</span>
+                  <a
+                    href={app.url}
+                    target="_blank"
+                    rel="noopener"
+                    className="service-link"
+                  >
+                    Visit &rarr;
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Deployed Services */}
       <section className="section">

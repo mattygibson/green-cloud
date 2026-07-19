@@ -1,10 +1,11 @@
 import logging
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.db.database import Base, engine
-from app.routers import auth, deployments, health, webhooks
+from app.routers import apps, auth, deployments, health, webhooks
 
 # Configure logging
 logging.basicConfig(
@@ -19,6 +20,18 @@ app = FastAPI(
     docs_url="/docs",
 )
 
+# CORS — allow the dashboard frontend to call this API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://app.green-cloud.uk",
+        "http://app.localhost",
+        "http://localhost:3000",
+    ],
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
+
 # Prometheus metrics instrumentation
 Instrumentator().instrument(app).expose(app)
 
@@ -30,3 +43,4 @@ app.include_router(health.router)
 app.include_router(webhooks.router)
 app.include_router(deployments.router)
 app.include_router(auth.router)
+app.include_router(apps.router)
