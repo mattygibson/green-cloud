@@ -7,6 +7,7 @@ Step-by-step record of how green-cloud.uk was set up with Cloudflare Tunnel.
 - Domain: `green-cloud.uk` (bought directly from Cloudflare)
 - Cloudflare manages DNS automatically (no nameserver change needed)
 - Tunnel name: `greencloud`
+- **Wildcard routing:** `*.green-cloud.uk` routes all subdomains through the tunnel
 - All traffic flows: Internet → Cloudflare → Tunnel → Traefik → services
 
 ## Public URLs
@@ -14,10 +15,12 @@ Step-by-step record of how green-cloud.uk was set up with Cloudflare Tunnel.
 | URL | Service |
 |-----|--------|
 | `https://green-cloud.uk` | Landing page (links to all services) |
-| `https://app.green-cloud.uk` | Production app (React UI + FastAPI) |
+| `https://app.green-cloud.uk` | Production dashboard (React UI + FastAPI + app discovery) |
+| `https://meal-planner.green-cloud.uk` | Meal Planner (third-party app — PaaS proof) |
 | `https://grafana.green-cloud.uk` | Grafana dashboards |
 | `https://carbon.green-cloud.uk` | Carbon Engine API |
 | `https://api.green-cloud.uk` | GreenCloud management API |
+| `https://<any-app>.green-cloud.uk` | Any deployed user app (wildcard routing) |
 
 ## Setup Steps (what we did)
 
@@ -43,21 +46,33 @@ Step-by-step record of how green-cloud.uk was set up with Cloudflare Tunnel.
    CLOUDFLARE_TUNNEL_TOKEN=ey...the-actual-token...
    ```
 
-### 4. Added public hostnames
+### 4. Configured wildcard routing
 
-In the tunnel config → Public Hostname tab, added entries one at a time:
+Instead of adding individual public hostnames per subdomain, we use a single **wildcard route** that forwards all subdomains to Traefik. Traefik then routes internally based on the Host header.
+
+In the tunnel config → Public Hostname tab:
 
 | Subdomain | Domain | Service |
 |-----------|--------|--------|
+| `*` | `green-cloud.uk` | `http://greencloud-traefik:80` |
 | *(empty)* | `green-cloud.uk` | `http://greencloud-traefik:80` |
-| `app` | `green-cloud.uk` | `http://greencloud-traefik:80` |
-| `grafana` | `green-cloud.uk` | `http://greencloud-traefik:80` |
-| `carbon` | `green-cloud.uk` | `http://greencloud-traefik:80` |
-| `api` | `green-cloud.uk` | `http://greencloud-traefik:80` |
 
-All point to Traefik — it routes internally by hostname.
+The wildcard entry (`*`) catches all subdomains (`app.`, `grafana.`, `meal-planner.`, `anything.`) and sends them to Traefik. The empty subdomain entry handles the apex domain (`green-cloud.uk` itself).
 
-### 5. Updated `.env`
+**Why wildcard:** New apps deployed to GreenCloud become publicly accessible immediately — no need to add a new public hostname in Cloudflare for each app. Just add a Traefik Host rule label to the container and it works.
+
+### 5. Added wildcard DNS CNAME record
+
+In Cloudflare DNS settings, add a wildcard CNAME:
+
+| Type | Name | Content | Proxy |
+|------|------|---------|-------|
+| CNAME | `*` | `<tunnel-id>.cfargotunnel.com` | Proxied |
+| CNAME | `@` | `<tunnel-id>.cfargotunnel.com` | Proxied |
+
+Cloudflare creates CNAME records automatically for individually configured hostnames, but for wildcard routing you need the wildcard CNAME record (`*`) to exist so DNS resolution works for arbitrary subdomains.
+
+### 6. Updated `.env`
 
 In `infra/.env`:
 ```
@@ -67,7 +82,7 @@ GRAFANA_USER=admin
 GRAFANA_PASSWORD=your-secure-password
 ```
 
-### 6. Started everything with tunnel
+### 7. Started everything with tunnel
 
 ```bash
 docker compose -f infra/docker-compose.infra.yml down
@@ -75,11 +90,28 @@ docker compose -f infra/docker-compose.infra.yml --profile tunnel up -d
 docker compose -f infra/docker-compose.prod.yml up -d
 ```
 
-### 7. Verified
+### 8. Verified
 
 - `docker logs greencloud-tunnel` — check for "Connection registered"
 - Cloudflare dashboard: tunnel shows HEALTHY
 - Visited `https://app.green-cloud.uk` from phone
+- Visited `https://meal-planner.green-cloud.uk` from phone — confirms wildcard working
+
+## Adding a New App (no Cloudflare changes needed)
+
+With wildcard routing, deploying a new app is straightforward:
+
+1. Build and push the image to the local registry
+2. Add the service to a Compose file with Traefik labels:
+   ```yaml
+   labels:
+     - "traefik.enable=true"
+     - "traefik.http.routers.my-app.rule=Host(`my-app.green-cloud.uk`)"
+   ```
+3. Ensure the service is on the `greencloud-prod` network
+4. Start the container — it's publicly accessible at `https://my-app.green-cloud.uk`
+
+No DNS changes, no Cloudflare tunnel hostname additions required.
 
 ## How to Restart After Reboot
 
@@ -120,11 +152,21 @@ docker compose -f infra/docker-compose.infra.yml --profile tunnel up -d
 - Check: `docker ps` to see what's up
 - Restart the specific service: `docker compose -f infra/docker-compose.infra.yml up -d <service>`
 
-### DNS not resolving (new subdomain)
+### New subdomain not resolving
 
-- Add the hostname in Cloudflare tunnel config (Public Hostname tab)
-- Cloudflare creates the CNAME automatically
-- Wait 1-2 minutes for propagation
+With wildcard routing, you should NOT need to add individual hostnames. If a new subdomain doesn't resolve:
+1. Verify the wildcard CNAME record (`*`) exists in Cloudflare DNS
+2. Verify the wildcard public hostname (`*`) exists in the tunnel config
+3. Check that Traefik has a matching router (inspect Traefik dashboard at `http://localhost:8080`)
+4. Ensure the container has the correct `traefik.http.routers.<name>.rule=Host(...)` label
+5. Ensure the container is on the `greencloud-prod` network
+
+### App accessible locally but not publicly
+
+- Confirm the tunnel is running: `docker ps | grep tunnel`
+- Check tunnel logs: `docker logs greencloud-tunnel`
+- Verify the Cloudflare dashboard shows the tunnel as HEALTHY
+- Confirm Traefik can reach the service (check Traefik dashboard for errors)
 
 ## Local Development (no tunnel)
 
