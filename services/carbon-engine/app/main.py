@@ -4,6 +4,7 @@ import asyncio
 import logging
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import Gauge, Counter
 from prometheus_fastapi_instrumentator import Instrumentator
 
@@ -24,6 +25,18 @@ app = FastAPI(
     description="Carbon-aware scheduling and emissions tracking",
     version="0.1.0",
     docs_url="/docs",
+)
+
+# CORS — allow the app frontend to call this service directly
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://app.green-cloud.uk",
+        "http://app.localhost",
+        "http://localhost",
+    ],
+    allow_methods=["GET"],
+    allow_headers=["*"],
 )
 
 # Prometheus metrics instrumentation
