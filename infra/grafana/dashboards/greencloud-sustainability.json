@@ -1,10 +1,21 @@
 {
   "annotations": { "list": [] },
+  "description": "Tracks the carbon footprint of GreenCloud infrastructure. Shows real-time grid carbon intensity from Electricity Maps, estimated power consumption, cumulative CO2 emissions, and carbon-aware scheduling decisions.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "links": [],
   "panels": [
+    {
+      "gridPos": { "h": 3, "w": 24, "x": 0, "y": 0 },
+      "id": 10,
+      "title": "",
+      "type": "text",
+      "options": {
+        "mode": "markdown",
+        "content": "### How to read this dashboard\n\n**Grid Carbon Intensity** shows how clean the electricity grid is right now (lower = cleaner). When it's green (<100), all builds proceed. When amber (100-300), dev builds are deferred. When red (>300), only production deploys go ahead.\n\n**Power Draw** is estimated from CPU usage. **Emissions** = power consumed x grid carbon intensity over time. **Builds Deferred** counts how many non-critical builds were delayed to wait for cleaner energy."
+      }
+    },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
@@ -17,13 +28,15 @@
               { "color": "red", "value": 300 }
             ]
           },
-          "unit": "gCO2/kWh"
+          "unit": "none",
+          "max": 500
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 3 },
       "id": 1,
-      "title": "Grid Carbon Intensity",
+      "title": "Grid Carbon Intensity (gCO2eq/kWh)",
+      "description": "How much CO2 is emitted per kWh of electricity generated right now. Data from Electricity Maps for your configured zone. Green = clean grid, Red = fossil-heavy grid.",
       "type": "gauge",
       "targets": [
         {
@@ -35,13 +48,28 @@
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
-        "defaults": { "unit": "short" },
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 2 }
+            ]
+          },
+          "mappings": [
+            { "options": { "0": { "text": "LOW (Green)", "color": "green" } }, "type": "value" },
+            { "options": { "1": { "text": "MEDIUM (Amber)", "color": "yellow" } }, "type": "value" },
+            { "options": { "2": { "text": "HIGH (Red)", "color": "red" } }, "type": "value" }
+          ],
+          "unit": "short"
+        },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 3 },
       "id": 2,
       "title": "Carbon Status",
-      "description": "0=Low (green), 1=Medium (amber), 2=High (red)",
+      "description": "Current scheduling status. LOW = all builds proceed. MEDIUM = non-critical builds deferred. HIGH = only production deploys allowed.",
       "type": "stat",
       "targets": [
         {
@@ -59,9 +87,10 @@
         "defaults": { "unit": "watt" },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 3 },
       "id": 3,
-      "title": "Power Draw",
+      "title": "Total Power Draw",
+      "description": "Estimated total power consumption across all GreenCloud nodes (Pi 5 + Mini PC). Based on CPU usage: idle ~4W, full load ~12W for the Pi.",
       "type": "stat",
       "targets": [
         {
@@ -73,12 +102,13 @@
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
-        "defaults": { "unit": "gCO2/kWh" },
+        "defaults": { "unit": "none" },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 11 },
       "id": 4,
-      "title": "Carbon Intensity Timeline",
+      "title": "Carbon Intensity Over Time (gCO2eq/kWh)",
+      "description": "Shows how the grid's carbon intensity changes throughout the day. Typically lower at night and when wind/solar generation is high. Useful for understanding when your infrastructure runs cleanest.",
       "type": "timeseries",
       "targets": [
         {
@@ -93,9 +123,10 @@
         "defaults": { "unit": "watt" },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 11 },
       "id": 5,
       "title": "Power Usage by Node",
+      "description": "Power draw per node. The Pi 5 runs 24/7 (4-12W). The Mini PC only draws power during builds (15-65W) and sleeps otherwise.",
       "type": "timeseries",
       "targets": [
         {
@@ -110,9 +141,10 @@
         "defaults": { "unit": "short" },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 16 },
+      "gridPos": { "h": 5, "w": 8, "x": 0, "y": 19 },
       "id": 6,
       "title": "Total Emissions (gCO2)",
+      "description": "Cumulative CO2 emitted since tracking began. Calculated as: energy consumed (kWh) x grid carbon intensity (gCO2/kWh) integrated over time.",
       "type": "stat",
       "targets": [
         {
@@ -127,9 +159,10 @@
         "defaults": { "unit": "short" },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 16 },
+      "gridPos": { "h": 5, "w": 8, "x": 8, "y": 19 },
       "id": 7,
       "title": "Emissions Today (gCO2)",
+      "description": "CO2 emitted today so far. For context: a typical GreenCloud day emits roughly 0.5-2g CO2 — equivalent to driving a car about 5 metres.",
       "type": "stat",
       "targets": [
         {
@@ -144,9 +177,10 @@
         "defaults": { "unit": "short" },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 16 },
+      "gridPos": { "h": 5, "w": 8, "x": 16, "y": 19 },
       "id": 8,
       "title": "Builds Deferred",
+      "description": "Number of non-critical builds that were delayed because the grid was too carbon-intensive. These builds ran later when the grid was cleaner, saving emissions.",
       "type": "stat",
       "targets": [
         {
@@ -162,5 +196,5 @@
   "time": { "from": "now-24h", "to": "now" },
   "title": "GreenCloud Sustainability",
   "uid": "greencloud-sustainability",
-  "version": 2
+  "version": 3
 }
