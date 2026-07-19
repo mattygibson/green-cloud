@@ -39,10 +39,12 @@ docker rm -f sanity-check
 
 ### Via the deployment pipeline
 
+Trigger a dev deployment to test the full pipeline:
+
 ```bash
 curl -X POST http://localhost:8000/deployments/trigger \
   -H "Content-Type: application/json" \
-  -d '{"environment":"prod","branch":"main","commit_sha":"test123"}'
+  -d '{"environment":"dev","branch":"dev","commit_sha":"test123"}'
 ```
 
 Then check `curl http://localhost:8000/deployments/1/logs` to verify the build pipeline runs end-to-end.

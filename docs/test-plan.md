@@ -4,12 +4,14 @@
 
 This test plan covers the current state of GreenCloud (Tasks 1-5). It validates all services, endpoints, and integration points work correctly.
 
+**All testing uses the dev environment. Prod is only for the finished product.**
+
 ## Prerequisites
 
 - Docker Desktop installed and running
 - `uv` installed (for lockfile generation)
 - Repository cloned locally
-- No other services using ports: 80, 5000, 8000, 8001, 8080
+- No other services using ports: 5000, 5433, 8000, 8001, 3001, 9090
 
 ## 1. Infrastructure Stack
 
@@ -50,65 +52,70 @@ This test plan covers the current state of GreenCloud (Tasks 1-5). It validates 
 | 21 | System stats | `curl http://localhost:8001/agent/stats` | Returns JSON with cpu/memory/disk/containers |
 | 22 | Dev status | `curl http://localhost:8001/agent/dev/status` | Returns `{"status":"stopped"}` or `{"status":"running"}` |
 
-## 2. Production App Stack
+## 2. Dev App Stack (use for all testing)
 
 ### 2.1 Full Stack Startup
 
 | # | Test | Command | Expected Result |
 |---|------|---------|-----------------|
-| 23 | Prod stack starts | `docker compose -f infra/docker-compose.prod.yml up -d --build` | All containers start |
-| 24 | Database healthy | `docker ps` (check `prod-db`) | Status shows `(healthy)` |
-| 25 | API healthy | `docker ps` (check `prod-api`) | Status shows `(healthy)` |
-| 26 | UI healthy | `docker ps` (check `prod-ui`) | Status shows `(healthy)` |
-| 27 | Traefik running | `docker ps` (check `greencloud-traefik`) | Status shows `Up` |
+| 23 | Dev stack starts | `docker compose -f infra/docker-compose.dev.yml up -d --build` | All containers start |
+| 24 | Database healthy | `docker ps` (check `dev-db`) | Status shows `(healthy)` |
+| 25 | API healthy | `docker ps` (check `dev-api`) | Status shows `(healthy)` |
+| 26 | UI healthy | `docker ps` (check `dev-ui`) | Status shows `(healthy)` |
 
-### 2.2 Traefik Routing
-
-| # | Test | Command | Expected Result |
-|---|------|---------|-----------------|
-| 28 | UI accessible | Open `http://app.localhost` | GreenCloud React UI loads |
-| 29 | Health via Traefik | `curl http://app.localhost/health` | Returns `{"status":"healthy","database":"connected","environment":"production"}` |
-| 30 | API items endpoint | `curl http://app.localhost/api/v1/items` | Returns JSON array (may have seed item) |
-| 31 | Create item | `curl -X POST http://app.localhost/api/v1/items -H "Content-Type: application/json" -d '{"name":"Test","description":"A test item"}'` | Returns 201 with created item |
-| 32 | Get item | `curl http://app.localhost/api/v1/items/1` | Returns the item |
-| 33 | Delete item | `curl -X DELETE http://app.localhost/api/v1/items/1` | Returns 204 |
-| 34 | Traefik dashboard | Open `http://localhost:8080` | Traefik dashboard loads |
-| 35 | Routers registered | `curl http://localhost:8080/api/http/routers` | Shows prod-api, prod-health, prod-ui routers |
-
-### 2.3 Database
+### 2.2 Dev Endpoints
 
 | # | Test | Command | Expected Result |
 |---|------|---------|-----------------|
-| 36 | Seed data loaded | `curl http://app.localhost/api/v1/items` | Contains "GreenCloud" seed item |
-| 37 | Data persists | Restart prod stack, check items again | Same items present |
-| 38 | CRUD works | Create, read, delete an item via API | All operations succeed |
+| 27 | UI accessible | Open `http://localhost:3001` | GreenCloud React UI loads |
+| 28 | API items endpoint | `curl http://localhost:8001/api/v1/items` | Returns JSON array (may have seed item) |
+| 29 | Create item | `curl -X POST http://localhost:8001/api/v1/items -H "Content-Type: application/json" -d '{"name":"Test","description":"A test item"}'` | Returns 201 with created item |
+| 30 | Get item | `curl http://localhost:8001/api/v1/items/1` | Returns the item |
+| 31 | Delete item | `curl -X DELETE http://localhost:8001/api/v1/items/1` | Returns 204 |
 
-## 3. Dev Stack (Isolation)
+### 2.3 Database (pgAdmin access)
 
 | # | Test | Command | Expected Result |
 |---|------|---------|-----------------|
-| 39 | Dev starts separately | `docker compose -f infra/docker-compose.dev.yml up -d --build` | Dev containers start alongside prod |
-| 40 | Dev API on different port | `curl http://localhost:8001/health` (if port 8001 configured) | Dev API responds |
-| 41 | Dev DB isolated | Create item in dev, verify it doesn't appear in prod | Separate databases |
-| 42 | Dev stop | `docker compose -f infra/docker-compose.dev.yml down` | Dev stops, prod unaffected |
-| 43 | Prod still running | `curl http://app.localhost/health` after dev stop | Still returns healthy |
+| 32 | pgAdmin connects | Connect to localhost:5433, user: greencloud, pass: changeme_dev | Connection succeeds |
+| 33 | Seed data loaded | Check items table | Contains "GreenCloud" seed item |
+| 34 | Data persists | Restart dev stack, check items again | Same items present |
+| 35 | CRUD works | Create, read, delete an item via API | All operations succeed |
 
-## 4. Integration Tests
+## 3. Environment Isolation
 
 | # | Test | Steps | Expected Result |
 |---|------|-------|-----------------|
-| 44 | Registry ↔ API | GreenCloud API health check reports registry connected | `"registry": "connected"` |
-| 45 | Full rebuild | `make clean && make infra-up && make prod-up` | Everything comes up clean |
-| 46 | Makefile commands | Run `make prod-up`, `make prod-down`, `make dev-up`, `make dev-down` | All work correctly |
+| 36 | Dev and prod isolated | Start both, create item in dev | Item does NOT appear in prod |
+| 37 | Dev stop doesn't affect prod | `docker compose -f infra/docker-compose.dev.yml down` | Prod (if running) still works |
+| 38 | Prod stop doesn't affect dev | `docker compose -f infra/docker-compose.prod.yml down` | Dev still works |
 
-## 5. Edge Cases
+## 4. Deployment Pipeline
 
 | # | Test | Steps | Expected Result |
 |---|------|-------|-----------------|
-| 47 | Port conflict | Start stack with port 80 already in use | Clear error message |
-| 48 | Registry down | Stop registry, check API health | Reports `"registry": "disconnected"` |
-| 49 | Invalid item | `POST /api/v1/items` with empty body | Returns 422 validation error |
-| 50 | Non-existent item | `GET /api/v1/items/9999` | Returns 404 |
+| 39 | Trigger dev deployment | `curl -X POST http://localhost:8000/deployments/trigger -H "Content-Type: application/json" -d '{"environment":"dev","branch":"dev","commit_sha":"test123"}'` | Returns 202 |
+| 40 | Build completes | Wait 60s, check `curl http://localhost:8000/deployments/1/logs` | Status: `built` |
+| 41 | Images in registry | `curl http://localhost:5000/v2/_catalog` | Shows `greencloud/api` and `greencloud/ui` |
+| 42 | Sanity check image | Build + push + run test image at localhost:9090 | Shows "Hello World, Images are working!" |
+
+## 5. Integration Tests
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|-----------------|
+| 43 | Registry ↔ API | GreenCloud API health check reports registry connected | `"registry": "connected"` |
+| 44 | Full rebuild | `make clean && make infra-up && make dev-up` | Everything comes up clean |
+| 45 | Makefile commands | Run `make dev-up`, `make dev-down` | All work correctly |
+
+## 6. Edge Cases
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|-----------------|
+| 46 | Port conflict | Start stack with port already in use | Clear error message |
+| 47 | Registry down | Stop registry, check API health | Reports `"registry": "disconnected"` |
+| 48 | Invalid item | `POST /api/v1/items` with empty body | Returns 422 validation error |
+| 49 | Non-existent item | `GET /api/v1/items/9999` | Returns 404 |
+| 50 | Webhook rejects no signature | `POST /webhooks/github` with no signature | Returns 401 |
 
 ## Running the Full Test Suite
 
@@ -122,8 +129,8 @@ make infra-up
 # 3. Wait for healthy (30 seconds)
 sleep 30
 
-# 4. Start prod
-make prod-up
+# 4. Start dev (use dev for all testing)
+make dev-up
 
 # 5. Wait for healthy (30 seconds)
 sleep 30

@@ -15,6 +15,7 @@
 - Complete one task at a time in order unless instructed otherwise
 - Run tests/verification after each implementation step
 - Do not move to the next task without confirming the current one works
+- **Use the dev environment for all testing and verification** — prod is only for the finished product
 
 ## Branching Strategy (HARD RULE — never deviate)
 
