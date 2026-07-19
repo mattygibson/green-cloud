@@ -3,6 +3,8 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+import httpx
+
 from app.config import settings
 from app.database import Base, engine, get_db
 from app.models import Item
@@ -73,3 +75,37 @@ async def delete_item(item_id: int, db: Session = Depends(get_db)) -> None:
         raise HTTPException(status_code=404, detail="Item not found")
     db.delete(item)
     db.commit()
+
+
+@app.get("/api/v1/stats")
+async def get_system_stats():
+    """Proxy system stats from the agent service."""
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get("http://greencloud-agent:8000/agent/stats")
+            resp.raise_for_status()
+            return resp.json()
+    except Exception:
+        return {
+            "cpu_percent": None,
+            "memory": None,
+            "disk": None,
+            "containers": {"running": -1},
+        }
+
+
+@app.get("/api/v1/carbon")
+async def get_carbon_status():
+    """Proxy carbon status from the carbon engine."""
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get("http://greencloud-carbon:8000/carbon/status")
+            resp.raise_for_status()
+            return resp.json()
+    except Exception:
+        return {
+            "status": "unknown",
+            "carbon_intensity_gco2_kwh": 0,
+            "thresholds": {"low_below": 100, "high_above": 300},
+            "description": "Unable to reach carbon engine",
+        }
