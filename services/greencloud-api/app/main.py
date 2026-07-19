@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.db.database import Base, engine
-from app.routers import deployments, health, webhooks
+from app.routers import auth, deployments, health, webhooks
 
 # Configure logging
 logging.basicConfig(
@@ -29,3 +29,4 @@ Base.metadata.create_all(bind=engine)
 app.include_router(health.router)
 app.include_router(webhooks.router)
 app.include_router(deployments.router)
+app.include_router(auth.router)
