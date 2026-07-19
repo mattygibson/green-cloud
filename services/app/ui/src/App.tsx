@@ -43,13 +43,6 @@ interface CarbonStatus {
 
 const SERVICES: Service[] = [
   {
-    name: "Production App",
-    url: "https://app.green-cloud.uk",
-    description: "React frontend + FastAPI backend",
-    status: "unknown",
-    port: 80,
-  },
-  {
     name: "GreenCloud API",
     url: "https://api.green-cloud.uk/docs",
     description: "Deployment management and webhooks",
