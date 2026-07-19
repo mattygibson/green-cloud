@@ -12,6 +12,7 @@ interface Service {
   description: string;
   healthUrl: string;
   status: "healthy" | "unhealthy" | "unknown";
+  internal: boolean;
   port: number;
 }
 
@@ -46,6 +47,7 @@ const SERVICES: Service[] = [
     healthUrl: "https://api.green-cloud.uk/health",
     description: "Deployment management and webhooks",
     status: "unknown",
+    internal: false,
     port: 8000,
   },
   {
@@ -54,6 +56,7 @@ const SERVICES: Service[] = [
     healthUrl: "https://carbon.green-cloud.uk/health",
     description: "Carbon intensity and emissions tracking",
     status: "unknown",
+    internal: false,
     port: 8002,
   },
   {
@@ -62,6 +65,7 @@ const SERVICES: Service[] = [
     healthUrl: "https://grafana.green-cloud.uk/api/health",
     description: "Metrics dashboards and log viewer",
     status: "unknown",
+    internal: false,
     port: 3000,
   },
   {
@@ -70,6 +74,7 @@ const SERVICES: Service[] = [
     healthUrl: "",
     description: "Metrics collection and alerting",
     status: "unknown",
+    internal: true,
     port: 9090,
   },
   {
@@ -78,6 +83,7 @@ const SERVICES: Service[] = [
     healthUrl: "",
     description: "Local image storage",
     status: "unknown",
+    internal: true,
     port: 5000,
   },
 ];
@@ -108,6 +114,12 @@ function StatusDot({ status }: { status: string }) {
         marginRight: 6,
       }}
     />
+  );
+}
+
+function InternalBadge() {
+  return (
+    <span className="internal-badge">Internal</span>
   );
 }
 
@@ -244,7 +256,7 @@ function App() {
           {services.map((service) => (
             <div key={service.name} className="service-row">
               <div className="service-info">
-                <StatusDot status={service.healthUrl ? service.status : "unknown"} />
+                {service.internal ? <InternalBadge /> : <StatusDot status={service.status} />}
                 <div>
                   <div className="service-name">{service.name}</div>
                   <div className="service-desc">{service.description}</div>
