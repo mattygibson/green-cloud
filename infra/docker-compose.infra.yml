@@ -29,6 +29,9 @@ services:
       GREENCLOUD_DATABASE_URL: sqlite:///./data/greencloud.db
     volumes:
       - greencloud-api-data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ..:/workspace:ro
+    working_dir: /app
     ports:
       - "8000:8000"
     depends_on:

@@ -106,9 +106,9 @@ async def run_build_pipeline(deployment_id: int, db_session_factory) -> None:
 
         success, logs = await asyncio.to_thread(
             _run_build,
-            settings.registry_host,
+            settings.build_registry_host,
             settings.build_platform,
-            "services/app/api",
+            "/workspace/services/app/api",
             deployment.environment,
             deployment.commit_sha[:7],
         )
@@ -125,9 +125,9 @@ async def run_build_pipeline(deployment_id: int, db_session_factory) -> None:
 
         success, logs = await asyncio.to_thread(
             _run_build,
-            settings.registry_host,
+            settings.build_registry_host,
             settings.build_platform,
-            "services/app/ui",
+            "/workspace/services/app/ui",
             deployment.environment,
             deployment.commit_sha[:7],
         )

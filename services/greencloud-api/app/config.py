@@ -9,7 +9,8 @@ class Settings(BaseSettings):
     github_webhook_secret: str = "changeme"
 
     # Docker registry
-    registry_host: str = "localhost:5000"
+    registry_host: str = "localhost:5000"  # For API health checks (container network)
+    build_registry_host: str = "localhost:5000"  # For buildx push (host network)
 
     # Build server (Mini PC)
     build_server_mac: str = "AA:BB:CC:DD:EE:FF"
