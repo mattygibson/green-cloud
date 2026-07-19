@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.routers import deploy, dev, health, stats
 
@@ -15,6 +16,9 @@ app = FastAPI(
     version="0.1.0",
     docs_url="/docs",
 )
+
+# Prometheus metrics instrumentation
+Instrumentator().instrument(app).expose(app)
 
 app.include_router(health.router)
 app.include_router(deploy.router, prefix="/agent")

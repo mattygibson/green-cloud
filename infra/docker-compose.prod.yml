@@ -67,13 +67,18 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=greencloud-prod"
       - "--entrypoints.web.address=:80"
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.entryPoint=metrics"
+      - "--entrypoints.metrics.address=:8082"
     ports:
       - "80:80"
       - "8080:8080"
+      - "8082:8082"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - prod-net
+      - infra-net
 
 volumes:
   prod-db-data:
@@ -81,3 +86,6 @@ volumes:
 networks:
   prod-net:
     name: greencloud-prod
+  infra-net:
+    name: greencloud-infra
+    external: true

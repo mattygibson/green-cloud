@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI, HTTPException
+from prometheus_fastapi_instrumentator import Instrumentator
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -12,6 +13,9 @@ app = FastAPI(
     version="0.1.0",
     docs_url="/docs",
 )
+
+# Prometheus metrics instrumentation
+Instrumentator().instrument(app).expose(app)
 
 # Create tables on startup
 Base.metadata.create_all(bind=engine)

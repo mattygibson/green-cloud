@@ -1,0 +1,67 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "panels": [
+    {
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Sustainability Dashboard",
+      "type": "text",
+      "options": {
+        "mode": "markdown",
+        "content": "## Carbon Awareness\n\nThis dashboard will display carbon intensity, energy usage, and emissions data once the Carbon Engine (Task 8) is implemented.\n\n**Planned panels:**\n- Current grid carbon intensity (gCO2/kWh)\n- Energy usage over time (Wh)\n- Cumulative emissions (gCO2)\n- Carbon-aware scheduling status\n- Deployment emissions per build"
+      }
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "percent" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 2,
+      "title": "System Power Proxy — CPU Usage",
+      "description": "CPU usage as a proxy for power consumption until real power monitoring is available",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "legendFormat": "CPU %"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "bytes" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "id": 3,
+      "title": "Network I/O (proxy for activity)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(node_network_receive_bytes_total{device!=\"lo\"}[5m])",
+          "legendFormat": "RX {{ device }}"
+        },
+        {
+          "expr": "rate(node_network_transmit_bytes_total{device!=\"lo\"}[5m])",
+          "legendFormat": "TX {{ device }}"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["greencloud", "sustainability", "carbon"],
+  "templating": { "list": [] },
+  "time": { "from": "now-24h", "to": "now" },
+  "title": "GreenCloud Sustainability",
+  "uid": "greencloud-sustainability",
+  "version": 1
+}
