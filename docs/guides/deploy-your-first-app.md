@@ -328,13 +328,14 @@ Total time: typically 2-5 minutes from push to live.
 
 ## Example: Meal Planner App
 
-For a complete working example, see the Meal Planner deployment:
+For a complete working example, see the [Meal Planner repo](https://github.com/mattygibson/Meal-Planner):
 
+- **Repo:** [github.com/mattygibson/Meal-Planner](https://github.com/mattygibson/Meal-Planner)
 - **App repo structure:** backend (FastAPI) + frontend (React/Vite)
 - **Backend Dockerfile:** `/backend/Dockerfile`
 - **Frontend Dockerfile:** `/frontend/Dockerfile`
 - **App config:** `/greencloud.yml`
-- **Live URL:** `https://meal-planner.green-cloud.uk`
+- **Live URL:** [meal-planner.green-cloud.uk](https://meal-planner.green-cloud.uk)
 
 This app was deployed following exactly the steps above — it serves as proof that the process works end-to-end.
 
