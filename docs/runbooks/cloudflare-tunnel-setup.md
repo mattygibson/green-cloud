@@ -46,16 +46,20 @@ DOMAIN=yourdomain.com
 
 ## Step 4: Configure public hostnames in Cloudflare
 
-Back in the Cloudflare tunnel configuration page, add public hostnames:
+Back in the Cloudflare tunnel configuration page, add **two** public hostnames using the wildcard approach:
 
 | Hostname | Service | Description |
 |----------|---------|-------------|
-| `app.yourdomain.com` | `http://greencloud-traefik:80` | Production app |
-| `grafana.yourdomain.com` | `http://greencloud-traefik:80` | Grafana dashboards |
-| `carbon.yourdomain.com` | `http://greencloud-traefik:80` | Carbon Engine API |
-| `api.yourdomain.com` | `http://greencloud-traefik:80` | GreenCloud management API |
+| `*.green-cloud.uk` | `http://greencloud-traefik:80` | All app subdomains (wildcard) |
+| `green-cloud.uk` | `http://greencloud-traefik:80` | Root domain (landing page) |
 
-All traffic goes to Traefik on port 80 — Traefik handles routing to the correct service based on the hostname.
+**Why wildcard?** All traffic goes to Traefik, which routes to the correct container based on the `Host` header (via Docker labels). This means:
+
+- Deploying a new app requires **zero** changes to tunnel config
+- Removing an app requires **zero** changes to tunnel config
+- Any container with Traefik labels like `Host(\`my-app.green-cloud.uk\`)` is automatically publicly accessible
+
+You never need to touch the Cloudflare dashboard again after this initial setup.
 
 ## Step 5: Start the tunnel
 
@@ -130,9 +134,20 @@ Browsers resolve `*.localhost` automatically. No `/etc/hosts` changes needed.
 
 ```
 [Internet] --> [Cloudflare Edge (HTTPS)] --> [Tunnel] --> [cloudflared container]
-    --> [Traefik :80] --> routes by hostname:
-        app.domain.com    --> prod-ui / prod-api
-        grafana.domain.com --> grafana
-        carbon.domain.com  --> carbon-engine
-        api.domain.com     --> greencloud-api
+    --> [Traefik :80] --> routes by hostname (via Docker labels):
+        *.green-cloud.uk --> matched by container labels:
+          app.green-cloud.uk         --> prod-ui / prod-api
+          meal-planner.green-cloud.uk --> meal-planner-ui / meal-planner-api
+          grafana.green-cloud.uk     --> grafana
+          carbon.green-cloud.uk      --> carbon-engine
+          api.green-cloud.uk         --> greencloud-api
+          <new-app>.green-cloud.uk   --> automatically routed (no config change)
 ```
+
+## How New Apps Get Routed Automatically
+
+1. You deploy a container with Traefik labels: `Host(\`my-app.green-cloud.uk\`)`
+2. Traefik auto-discovers the container via Docker socket
+3. Cloudflare tunnel wildcard (`*.green-cloud.uk`) already forwards all subdomains
+4. Traffic flows: Internet → Cloudflare → Tunnel → Traefik → your container
+5. **No manual steps required**
