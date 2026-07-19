@@ -1,0 +1,22 @@
+# GreenCloud App Configuration — Python FastAPI Template
+# Rename and adjust for your app.
+
+name: my-fastapi-app
+description: A FastAPI backend application
+
+services:
+  api:
+    context: .
+    port: 8000
+    health_check: /health
+    environment:
+      - PYTHONUNBUFFERED=1
+    resources:
+      memory: 128MB
+      cpu: 0.25
+
+routing:
+  subdomain: my-fastapi-app
+  rules:
+    - path_prefix: /
+      service: api
