@@ -94,6 +94,20 @@ services:
       timeout: 3s
       retries: 3
 
+  # --- Landing Page ---
+
+  landing:
+    container_name: greencloud-landing
+    build:
+      context: ../services/app/landing
+    restart: unless-stopped
+    networks:
+      - infra-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.landing.rule=Host(`${DOMAIN:-localhost}`)"
+      - "traefik.http.services.landing.loadbalancer.server.port=80"
+
   # --- Reverse Proxy ---
 
   traefik:
@@ -117,7 +131,6 @@ services:
       - "traefik.http.routers.dashboard.service=api@internal"
 
   # --- Cloudflare Tunnel (disabled by default) ---
-  # Uncomment or set CLOUDFLARE_TUNNEL_TOKEN in .env to enable
 
   cloudflared:
     image: cloudflare/cloudflared:latest
