@@ -28,8 +28,8 @@ scrape_configs:
     static_configs:
       - targets: ['greencloud-node-exporter:9100']
 
-  # Carbon engine metrics (added in Task 8)
-  - job_name: 'carbon'
+  # Carbon engine metrics
+  - job_name: 'carbon-engine'
     static_configs:
-      - targets: ['carbon-engine:8000']
+      - targets: ['greencloud-carbon:8000']
     metrics_path: /metrics
