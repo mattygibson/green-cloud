@@ -14,6 +14,10 @@ tunnel: <TUNNEL_UUID>
 credentials-file: /etc/cloudflared/credentials.json
 
 ingress:
+  # Landing page (root domain)
+  - hostname: yourdomain.com
+    service: http://greencloud-traefik:80
+
   # Production app
   - hostname: app.yourdomain.com
     service: http://greencloud-traefik:80
