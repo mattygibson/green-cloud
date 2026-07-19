@@ -76,7 +76,7 @@ COPY . .
 USER appuser
 EXPOSE 8000
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')" || exit 1
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
@@ -100,7 +100,7 @@ COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 EXPOSE 80
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:80/ || exit 1
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
 ```
@@ -285,7 +285,15 @@ curl https://<your-app>.green-cloud.uk/health
 
 - Verify your `/health` endpoint returns HTTP 200
 - Make sure the port in your Dockerfile matches the port in `greencloud.yml`
+- **Use `127.0.0.1` instead of `localhost` in health checks** — Alpine containers resolve `localhost` to IPv6 (`::1`) which nginx doesn't listen on. Always use the explicit IPv4 address.
 - Check container logs: `greencloud deploy logs <deploy-id>`
+
+### "Container is healthy but I get 404 from Traefik"
+
+- Check what host rule Traefik registered: `curl http://localhost:8080/api/http/routers | python -m json.tool`
+- The `DOMAIN` environment variable must be set when you start the compose stack — if unset it defaults to `localhost`
+- Set it explicitly before running: `set DOMAIN=green-cloud.uk` (Windows) or `export DOMAIN=green-cloud.uk` (Linux/Mac)
+- After changing DOMAIN, recreate containers: `docker compose up -d --force-recreate`
 
 ### "Frontend can't reach the API"
 

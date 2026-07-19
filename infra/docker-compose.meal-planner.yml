@@ -3,11 +3,13 @@
 # Example of a third-party app running on GreenCloud PaaS
 #
 # Usage:
+#   set DOMAIN=green-cloud.uk
 #   docker compose -f docker-compose.meal-planner.yml up --build -d
 #
 # Requires:
 #   - greencloud-prod network (created by docker-compose.infra.yml)
 #   - Traefik running (from docker-compose.infra.yml)
+#   - DOMAIN env var set (defaults to localhost if unset)
 # ---------------------------------------------------------------
 
 services:
@@ -23,10 +25,10 @@ services:
     networks:
       - greencloud-prod
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\""]
       interval: 10s
-      timeout: 3s
-      start_period: 5s
+      timeout: 5s
+      start_period: 15s
       retries: 3
     labels:
       - "traefik.enable=true"
