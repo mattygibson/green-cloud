@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenCloud</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #ffffff;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: #a0c4b8;
+            margin-bottom: 1.5rem;
+        }
+
+        .description {
+            font-size: 0.95rem;
+            color: #b0b0b0;
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .services {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 500px) {
+            .services {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .service-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: #e0e0e0;
+            transition: all 0.2s ease;
+        }
+
+        .service-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(72, 199, 142, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .service-card .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .service-card .name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+        }
+
+        .service-card .description {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+        }
+
+        .footer {
+            margin-top: 3rem;
+            font-size: 0.8rem;
+            color: #607d8b;
+        }
+
+        .footer a {
+            color: #48c78e;
+            text-decoration: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 0.4rem 1rem;
+            background: rgba(72, 199, 142, 0.1);
+            border: 1px solid rgba(72, 199, 142, 0.3);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #48c78e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">&#127793;</div>
+        <h1>GreenCloud</h1>
+        <p class="tagline">Carbon-aware self-hosted PaaS</p>
+
+        <p class="description">
+            GreenCloud is a personal project building a carbon-aware Platform-as-a-Service running on a Raspberry Pi 5. 
+            It's currently in active development — the goal is a fully self-hosted deployment pipeline that tracks its 
+            own carbon footprint and defers non-critical work to times when the electricity grid is cleanest. 
+            Everything below is live and running from home with zero open ports, powered by Cloudflare Tunnel.
+        </p>
+
+        <div class="services">
+            <a href="https://app.green-cloud.uk" class="service-card" target="_blank" rel="noopener">
+                <div class="icon">&#128187;</div>
+                <div class="name">Application</div>
+                <div class="description">Production web app</div>
+            </a>
+
+            <a href="https://grafana.green-cloud.uk" class="service-card" target="_blank" rel="noopener">
+                <div class="icon">&#128200;</div>
+                <div class="name">Grafana</div>
+                <div class="description">Metrics and dashboards</div>
+            </a>
+
+            <a href="https://carbon.green-cloud.uk/docs" class="service-card" target="_blank" rel="noopener">
+                <div class="icon">&#127811;</div>
+                <div class="name">Carbon Engine</div>
+                <div class="description">Emissions and grid intensity</div>
+            </a>
+
+            <a href="https://api.green-cloud.uk/docs" class="service-card" target="_blank" rel="noopener">
+                <div class="icon">&#9881;&#65039;</div>
+                <div class="name">API</div>
+                <div class="description">Deployment management</div>
+            </a>
+        </div>
+
+        <div class="status-badge">Powered by Raspberry Pi 5</div>
+
+        <div class="footer">
+            <p><a href="https://github.com/mattygibson/green-cloud" target="_blank" rel="noopener">Source on GitHub</a></p>
+        </div>
+    </div>
+</body>
+</html>
