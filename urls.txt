@@ -1,5 +1,17 @@
+== Prod App ==
 UI: http://app.localhost
 API Health: http://app.localhost/health
 API Items: http://app.localhost/api/v1/items
 API Docs (Swagger): http://app.localhost/docs
+
+== Infrastructure ==
 Traefik Dashboard: http://localhost:8080
+GreenCloud API: http://localhost:8000/docs
+Agent: http://localhost:8001/docs
+Registry: http://localhost:5000/v2/_catalog
+
+== Observability ==
+Grafana: http://localhost:3000 (admin / changeme)
+Prometheus: http://localhost:9090
+Loki: http://localhost:3100/ready
+Node Exporter: http://localhost:9100/metrics
