@@ -2,7 +2,7 @@
 
 ## Overview
 
-This test plan covers the current state of GreenCloud (Tasks 1-5). It validates all services, endpoints, and integration points work correctly.
+This test plan covers all GreenCloud services, endpoints, integration points, and the multi-app PaaS capabilities including external app deployment and wildcard routing.
 
 **All testing uses the dev environment. Prod is only for the finished product.**
 
@@ -117,6 +117,49 @@ This test plan covers the current state of GreenCloud (Tasks 1-5). It validates 
 | 49 | Non-existent item | `GET /api/v1/items/9999` | Returns 404 |
 | 50 | Webhook rejects no signature | `POST /webhooks/github` with no signature | Returns 401 |
 
+## 7. External App Deployment (Meal-Planner)
+
+Tests for deploying third-party applications to GreenCloud as a PaaS.
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|-----------------|
+| 51 | Build external app image | `docker build -t localhost:5000/greencloud/meal-planner-api:latest <path>` | Image builds successfully |
+| 52 | Push to registry | `docker push localhost:5000/greencloud/meal-planner-api:latest` | Push succeeds |
+| 53 | Image in catalog | `curl http://localhost:5000/v2/_catalog` | Shows `greencloud/meal-planner-api` in repositories |
+| 54 | App starts with Traefik labels | Start container with `Host(\`meal-planner.green-cloud.uk\`)` label | Container runs, Traefik registers router |
+| 55 | App accessible via Traefik | `curl -H "Host: meal-planner.green-cloud.uk" http://localhost` | Returns app response (not 404) |
+| 56 | App on correct network | `docker inspect <container> --format '{{.NetworkSettings.Networks}}'` | Shows `greencloud-prod` network |
+| 57 | App survives restart | `docker compose ... restart` then re-test | App still accessible |
+| 58 | Multiple apps coexist | Deploy a second app alongside Meal-Planner | Both accessible on different subdomains |
+
+## 8. Wildcard Routing Verification
+
+Tests to confirm the wildcard Cloudflare Tunnel and DNS routing works correctly.
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|-----------------|
+| 59 | Wildcard DNS resolves | `nslookup random-test.green-cloud.uk` | Resolves (CNAME to tunnel) |
+| 60 | Known subdomain works | Visit `https://app.green-cloud.uk` from external device | Loads dashboard |
+| 61 | Meal-planner subdomain works | Visit `https://meal-planner.green-cloud.uk` from external device | Loads Meal Planner app |
+| 62 | Unknown subdomain returns 404 | Visit `https://nonexistent.green-cloud.uk` from external device | Traefik returns 404 (no matching router) |
+| 63 | New app auto-accessible | Deploy new app with Host label, visit subdomain externally | App accessible without any DNS/tunnel changes |
+| 64 | Tunnel health | Cloudflare Dashboard → Zero Trust → Tunnels | Tunnel shows HEALTHY |
+| 65 | Tunnel container logs | `docker logs greencloud-tunnel` | Shows "Connection registered", no errors |
+
+## 9. App Discovery Endpoint (`/api/v1/apps`)
+
+Tests for the dynamic app discovery API that queries Docker for running user apps.
+
+| # | Test | Steps | Expected Result |
+|---|------|-------|-----------------|
+| 66 | Endpoint responds | `curl http://localhost:8000/api/v1/apps` | Returns 200 with JSON array |
+| 67 | Includes running user apps | Start Meal-Planner, call endpoint | Response includes meal-planner entry |
+| 68 | Excludes infrastructure | Ensure infrastructure containers (registry, API, agent) are NOT listed | Only user apps returned |
+| 69 | Shows app metadata | Check response fields for a listed app | Includes name, URL/subdomain, status |
+| 70 | Reflects state changes | Stop a user app, re-call endpoint | Stopped app no longer listed |
+| 71 | Dashboard shows apps | Visit `https://app.green-cloud.uk` | "Hosted Applications" section shows running user apps |
+| 72 | Dashboard updates dynamically | Deploy/stop an app, refresh dashboard | UI reflects current state |
+
 ## Running the Full Test Suite
 
 ```bash
@@ -135,7 +178,7 @@ make dev-up
 # 5. Wait for healthy (30 seconds)
 sleep 30
 
-# 6. Run through tests 1-50 above
+# 6. Run through tests 1-72 above
 
 # 7. Cleanup
 make clean
@@ -143,5 +186,8 @@ make clean
 
 ## Status
 
-- [ ] All tests passing
+- [ ] Tests 1-50 passing (core platform)
+- [ ] Tests 51-58 passing (external app deployment)
+- [ ] Tests 59-65 passing (wildcard routing)
+- [ ] Tests 66-72 passing (app discovery)
 - [ ] Documented any failures and fixes

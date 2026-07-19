@@ -10,6 +10,8 @@ After following this guide, you'll have:
 - A local Docker registry storing your images
 - A deployment management API (GreenCloud API)
 - A node agent for container orchestration
+- Cloudflare Tunnel for public access (*.green-cloud.uk)
+- Dynamic app discovery and hosted applications dashboard
 
 All running locally on your machine via Docker.
 
@@ -180,6 +182,48 @@ Prod URLs:
 | http://app.localhost/api/v1/items | Production items endpoint |
 | http://localhost:8080 | Traefik dashboard |
 
+## Step 10: Enable Public Access (Cloudflare Tunnel)
+
+To make services publicly accessible via `*.green-cloud.uk`:
+
+1. Ensure `CLOUDFLARE_TUNNEL_TOKEN` is set in `infra/.env`
+2. Start with the tunnel profile:
+
+```bash
+docker compose -f infra/docker-compose.infra.yml --profile tunnel up -d
+docker compose -f infra/docker-compose.prod.yml up -d
+```
+
+The wildcard tunnel route (`*.green-cloud.uk → greencloud-traefik:80`) means any new app you deploy with a Traefik host rule is publicly accessible immediately — no manual DNS or tunnel changes needed.
+
+See [Domain and Tunnel Setup](runbooks/domain-and-tunnel-setup.md) for full details.
+
+## Deploying External Apps
+
+GreenCloud can host third-party applications alongside the core platform. For example, the Meal-Planner app is deployed at [meal-planner.green-cloud.uk](https://meal-planner.green-cloud.uk).
+
+### Quick steps
+
+1. Use a Dockerfile template from the `templates/` directory (Python FastAPI or React Vite available)
+2. Build and push the image to the local registry:
+   ```bash
+   docker build -t localhost:5000/greencloud/my-app:latest .
+   docker push localhost:5000/greencloud/my-app:latest
+   ```
+3. Add your app's service to a Compose file with Traefik labels:
+   ```yaml
+   labels:
+     - "traefik.enable=true"
+     - "traefik.http.routers.my-app.rule=Host(`my-app.green-cloud.uk`)"
+   ```
+4. Start the app — it's publicly accessible immediately via wildcard routing.
+
+For the full walkthrough, see [Deploy Your First App](guides/deploy-your-first-app.md).
+
+### App Discovery
+
+The GreenCloud API exposes a `/api/v1/apps` endpoint that dynamically queries Docker for running user apps. The dashboard at [app.green-cloud.uk](https://app.green-cloud.uk) displays these in the "Hosted Applications" section automatically.
+
 ## Useful Commands
 
 | Command | What it does |
@@ -240,6 +284,15 @@ docker logs <container-name>
 
 Docker Desktop isn't running. Start it and wait for the green icon.
 
+### New app not accessible publicly
+
+If you deployed a new app and it's not reachable at `<app>.green-cloud.uk`:
+1. Verify the container is running: `docker ps | grep <app>`
+2. Check Traefik labels are correct (Host rule matches the subdomain)
+3. Ensure the container is on the `greencloud-prod` network
+4. Check Traefik dashboard for the router entry
+5. No DNS changes needed — wildcard CNAME covers all subdomains
+
 ## Architecture
 
 ```
@@ -250,6 +303,9 @@ Docker Desktop isn't running. Start it and wait for the green icon.
 │  │ greencloud-registry (:5000)                    │  │
 │  │ greencloud-api (:8000)                         │  │
 │  │ greencloud-agent (:8001)                       │  │
+│  │ greencloud-tunnel (Cloudflare)                 │  │
+│  │ prometheus + grafana + loki                    │  │
+│  │ carbon-engine                                  │  │
 │  └────────────────────────────────────────────────┘  │
 │                                                      │
 │  ┌─── Dev Stack (daily use) ─────────────────────┐  │
@@ -264,15 +320,23 @@ Docker Desktop isn't running. Start it and wait for the green icon.
 │  │ prod-api (FastAPI)                             │  │
 │  │ prod-ui (React + nginx)                        │  │
 │  └────────────────────────────────────────────────┘  │
+│                                                      │
+│  ┌─── User Apps ─────────────────────────────────┐  │
+│  │ meal-planner (meal-planner.green-cloud.uk)     │  │
+│  │ ... (any app deployed via PaaS)                │  │
+│  └────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────┘
 ```
 
 ## What's Next
 
-This is the local development setup. The full GreenCloud vision includes:
-- Cloudflare Tunnel for public access (no open ports)
-- Carbon-aware scheduling via Electricity Maps
-- Deployment to Raspberry Pi hardware
-- CLI tool for managing deployments
+The remaining work to reach full production readiness:
 
-See the [full implementation plan](../.kiro/plans/implementation-plan.md) for details.
+- **Hardware deployment** — Raspberry Pi 5 + Mini PC procurement and setup
+- **Wake-on-LAN build pipeline** — Mini PC builds ARM64 images on demand (depends on hardware)
+- **Blue/green zero-downtime deployments** — rolling updates without downtime
+- **Multi-user management** — user registration, per-user API keys, app ownership
+- **Cloudflare Access** — protect admin services (Grafana, Traefik dashboard) from public access
+- **USB power meter** — real energy measurements for accurate carbon accounting
+
+See the [project blueprint](plan/greencloud-project-blueprint.md) for the full roadmap.

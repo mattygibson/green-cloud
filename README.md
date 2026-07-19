@@ -9,7 +9,8 @@ A carbon-aware self-hosted Platform-as-a-Service (PaaS) running on a Raspberry P
 | Service | URL | Description |
 |---------|-----|-------------|
 | Landing Page | [green-cloud.uk](https://green-cloud.uk) | Service directory |
-| Application | [app.green-cloud.uk](https://app.green-cloud.uk) | Deployment dashboard |
+| Dashboard | [app.green-cloud.uk](https://app.green-cloud.uk) | Deployment dashboard + hosted apps discovery |
+| Meal Planner | [meal-planner.green-cloud.uk](https://meal-planner.green-cloud.uk) | Third-party app (multi-user PaaS proof) |
 | Carbon Engine | [carbon.green-cloud.uk](https://carbon.green-cloud.uk/docs) | Emissions and grid intensity API |
 | Grafana | [grafana.green-cloud.uk](https://grafana.green-cloud.uk) | Metrics and dashboards |
 | GreenCloud API | [api.green-cloud.uk](https://api.green-cloud.uk/docs) | Deployment management |
@@ -72,6 +73,10 @@ Access at: `http://app.localhost`
 
 For full setup details: [docs/how-to-guide.md](docs/how-to-guide.md)
 
+## Deploy an App
+
+GreenCloud supports deploying external/third-party applications. See the [Deploy Your First App](docs/guides/deploy-your-first-app.md) guide and use the Dockerfile templates in the `templates/` directory.
+
 ## CLI
 
 ```bash
@@ -87,7 +92,7 @@ See [services/cli/README.md](services/cli/README.md) for all commands.
 
 ```
 green-cloud/
-├── docs/               # Architecture docs, ADRs, runbooks
+├── docs/               # Architecture docs, ADRs, runbooks, guides
 ├── services/           # Application code
 │   ├── greencloud-api/ # Deployment management API
 │   ├── agent/          # Node agent (container management)
@@ -95,6 +100,7 @@ green-cloud/
 │   ├── cli/            # Command-line tool (Typer + Rich)
 │   └── app/            # Full-stack app (API + UI + DB + Landing)
 ├── infra/              # Docker Compose, Traefik, Prometheus, Grafana
+├── templates/          # Dockerfile templates (Python FastAPI, React Vite)
 └── scripts/            # Utility scripts
 ```
 
@@ -107,12 +113,18 @@ green-cloud/
 - [x] Deployment agent with health checking
 - [x] Traefik reverse proxy with automatic routing
 - [x] Cloudflare Tunnel (zero open ports)
+- [x] Wildcard tunnel routing (*.green-cloud.uk) — new apps publicly accessible immediately
 - [x] Prometheus + Grafana + Loki observability
 - [x] Carbon Engine (Electricity Maps + emissions tracking)
 - [x] Carbon-aware scheduling (defer builds when grid is dirty)
 - [x] CLI tool (Typer + Rich)
 - [x] API key authentication (RBAC: admin/deployer/viewer)
 - [x] Landing page + deployment dashboard UI
+- [x] Dynamic app discovery (`/api/v1/apps` endpoint)
+- [x] Dashboard shows hosted applications dynamically
+- [x] Dockerfile templates (Python FastAPI, React Vite)
+- [x] "Deploy Your First App" user guide
+- [x] External app deployment (Meal-Planner as proof of multi-user PaaS)
 
 ## Waiting on Hardware
 
@@ -120,6 +132,8 @@ green-cloud/
 - [ ] Mini PC Wake-on-LAN build pipeline
 - [ ] Blue/green zero-downtime deployments
 - [ ] USB power meter for real measurements
+- [ ] Multi-user management system (user registration, per-user API keys, app ownership)
+- [ ] Cloudflare Access protection for admin services (#50)
 
 ## Key Design Decisions
 
@@ -131,6 +145,7 @@ green-cloud/
 ## Documentation
 
 - [How-to Guide](docs/how-to-guide.md) — Getting started
+- [Deploy Your First App](docs/guides/deploy-your-first-app.md) — Deploy an external app to GreenCloud
 - [Test Plan](docs/test-plan.md) — Verification steps
 - [Carbon Methodology](docs/sustainability/methodology.md) — How emissions are calculated
 - [Cloudflare Tunnel Setup](docs/runbooks/cloudflare-tunnel-setup.md) — Domain + tunnel config
@@ -139,6 +154,6 @@ green-cloud/
 
 ## Status
 
-**Software complete** — all services running on Windows dev machine via Docker. Waiting on Raspberry Pi 5 and Mini PC hardware to deploy to production.
+**Platform operational** — all services running on Windows dev machine via Docker Desktop. The platform is functioning as a multi-app PaaS with wildcard routing, dynamic app discovery, and external app hosting (Meal-Planner). Waiting on Raspberry Pi 5 and Mini PC hardware for dedicated deployment.
 
 Domain: [green-cloud.uk](https://green-cloud.uk) (live via Cloudflare Tunnel from dev machine)
