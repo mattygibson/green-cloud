@@ -1,0 +1,25 @@
+# Traefik Dynamic Configuration
+# Middlewares and extra routing rules that can't be expressed via Docker labels.
+
+http:
+  middlewares:
+    # Basic auth for internal services (generate with: htpasswd -nB admin)
+    # Default: admin / changeme (replace in production!)
+    internal-auth:
+      basicAuth:
+        users:
+          - "admin:$2y$05$WvOmHJQHL1kGqSBvk1bOCOcE5RYnEKSH1Bh8r3GHTc0NYmyMwbYq6"
+
+    # Rate limiting for public endpoints
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 50
+
+    # Security headers
+    security-headers:
+      headers:
+        frameDeny: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: "strict-origin-when-cross-origin"
