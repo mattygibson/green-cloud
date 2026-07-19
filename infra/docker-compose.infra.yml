@@ -39,6 +39,10 @@ services:
         condition: service_healthy
     networks:
       - infra-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.greencloud-api.rule=Host(`api.${DOMAIN:-localhost}`)"
+      - "traefik.http.services.greencloud-api.loadbalancer.server.port=8000"
 
   greencloud-agent:
     container_name: greencloud-agent
@@ -80,11 +84,54 @@ services:
       - "8002:8000"
     networks:
       - infra-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.carbon.rule=Host(`carbon.${DOMAIN:-localhost}`)"
+      - "traefik.http.services.carbon.loadbalancer.server.port=8000"
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 3
+
+  # --- Reverse Proxy ---
+
+  traefik:
+    image: traefik:v2.11
+    container_name: greencloud-traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "8082:8082"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+    networks:
+      - infra-net
+      - prod-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+
+  # --- Cloudflare Tunnel (disabled by default) ---
+  # Uncomment or set CLOUDFLARE_TUNNEL_TOKEN in .env to enable
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: greencloud-tunnel
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    networks:
+      - infra-net
+    depends_on:
+      - traefik
+    profiles:
+      - tunnel
 
   # --- Observability Stack ---
 
@@ -202,3 +249,5 @@ volumes:
 networks:
   infra-net:
     name: greencloud-infra
+  prod-net:
+    name: greencloud-prod

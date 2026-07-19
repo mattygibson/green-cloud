@@ -33,10 +33,10 @@ services:
       - prod-net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.prod-api.rule=Host(`app.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.prod-api.rule=Host(`app.${DOMAIN:-localhost}`) && PathPrefix(`/api`)"
       - "traefik.http.routers.prod-api.entrypoints=web"
       - "traefik.http.services.prod-api.loadbalancer.server.port=8000"
-      - "traefik.http.routers.prod-health.rule=Host(`app.localhost`) && Path(`/health`)"
+      - "traefik.http.routers.prod-health.rule=Host(`app.${DOMAIN:-localhost}`) && Path(`/health`)"
       - "traefik.http.routers.prod-health.entrypoints=web"
       - "traefik.http.routers.prod-health.service=prod-api"
 
@@ -51,34 +51,10 @@ services:
       - prod-net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.prod-ui.rule=Host(`app.localhost`) && PathPrefix(`/`)"
+      - "traefik.http.routers.prod-ui.rule=Host(`app.${DOMAIN:-localhost}`) && PathPrefix(`/`)"
       - "traefik.http.routers.prod-ui.entrypoints=web"
       - "traefik.http.routers.prod-ui.priority=1"
       - "traefik.http.services.prod-ui.loadbalancer.server.port=80"
-
-  traefik:
-    image: traefik:v2.11
-    container_name: greencloud-traefik
-    restart: unless-stopped
-    command:
-      - "--api.dashboard=true"
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.network=greencloud-prod"
-      - "--entrypoints.web.address=:80"
-      - "--metrics.prometheus=true"
-      - "--metrics.prometheus.entryPoint=metrics"
-      - "--entrypoints.metrics.address=:8082"
-    ports:
-      - "80:80"
-      - "8080:8080"
-      - "8082:8082"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - prod-net
-      - infra-net
 
 volumes:
   prod-db-data:
@@ -86,6 +62,4 @@ volumes:
 networks:
   prod-net:
     name: greencloud-prod
-  infra-net:
-    name: greencloud-infra
     external: true
