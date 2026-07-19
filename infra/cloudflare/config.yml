@@ -1,0 +1,38 @@
+# Cloudflare Tunnel Configuration Template
+#
+# This file is used when running cloudflared locally (not via TUNNEL_TOKEN).
+# If using the token-based approach (recommended), this file is not needed.
+#
+# To use this file:
+# 1. Replace <TUNNEL_UUID> with your actual tunnel UUID
+# 2. Place credentials.json at infra/cloudflare/credentials.json
+# 3. Uncomment the cloudflared service in docker-compose.infra.yml
+#
+# For token-based setup (simpler), just set CLOUDFLARE_TUNNEL_TOKEN in .env
+
+tunnel: <TUNNEL_UUID>
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  # Production app
+  - hostname: app.yourdomain.com
+    service: http://greencloud-traefik:80
+
+  # Dev app (only works when dev stack is running)
+  - hostname: dev.yourdomain.com
+    service: http://greencloud-traefik:80
+
+  # Grafana
+  - hostname: grafana.yourdomain.com
+    service: http://greencloud-traefik:80
+
+  # Traefik dashboard (protected by Cloudflare Access)
+  - hostname: traefik.yourdomain.com
+    service: http://greencloud-traefik:8080
+
+  # Carbon Engine API
+  - hostname: carbon.yourdomain.com
+    service: http://greencloud-traefik:80
+
+  # Catch-all: return 404 for unknown hostnames
+  - service: http_status:404

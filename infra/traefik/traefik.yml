@@ -1,0 +1,40 @@
+# Traefik Static Configuration
+# This file configures Traefik's core behaviour.
+# Service routing is handled via Docker labels on containers.
+
+api:
+  dashboard: true
+  insecure: true  # Set to false in production (use Cloudflare Access instead)
+
+entryPoints:
+  web:
+    address: ":80"
+  metrics:
+    address: ":8082"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: greencloud-infra
+    watch: true
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+metrics:
+  prometheus:
+    entryPoint: metrics
+    addEntryPointsLabels: true
+    addServicesLabels: true
+    addRoutersLabels: true
+
+log:
+  level: INFO
+  format: json
+
+accessLog:
+  format: json
+  filters:
+    statusCodes:
+      - "400-599"
