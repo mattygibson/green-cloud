@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.db.database import Base, engine
 from app.routers import deployments, health, webhooks
@@ -17,6 +18,9 @@ app = FastAPI(
     version="0.1.0",
     docs_url="/docs",
 )
+
+# Prometheus metrics instrumentation
+Instrumentator().instrument(app).expose(app)
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
