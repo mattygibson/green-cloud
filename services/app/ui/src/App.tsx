@@ -26,9 +26,6 @@ interface SystemStats {
     used_bytes: number;
     percent: number;
   } | null;
-  containers: {
-    running: number;
-  };
 }
 
 interface CarbonStatus {
@@ -169,12 +166,6 @@ function App() {
             <div className="stat-value">
               <StatusDot status={health?.status || "unknown"} />
               {health?.status?.toUpperCase() || "CHECKING"}
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Containers</div>
-            <div className="stat-value">
-              {stats?.containers?.running ?? "--"} running
             </div>
           </div>
           <div className="stat-card">
