@@ -13,7 +13,6 @@ interface Service {
   healthUrl: string;
   status: "healthy" | "unhealthy" | "unknown";
   internal: boolean;
-  port: number;
 }
 
 interface SystemStats {
@@ -48,7 +47,6 @@ const SERVICES: Service[] = [
     description: "Deployment management and webhooks",
     status: "unknown",
     internal: false,
-    port: 8000,
   },
   {
     name: "Carbon Engine",
@@ -57,7 +55,6 @@ const SERVICES: Service[] = [
     description: "Carbon intensity and emissions tracking",
     status: "unknown",
     internal: false,
-    port: 8002,
   },
   {
     name: "Grafana",
@@ -66,7 +63,6 @@ const SERVICES: Service[] = [
     description: "Metrics dashboards and log viewer",
     status: "unknown",
     internal: false,
-    port: 3000,
   },
   {
     name: "Prometheus",
@@ -75,7 +71,6 @@ const SERVICES: Service[] = [
     description: "Metrics collection and alerting",
     status: "unknown",
     internal: true,
-    port: 9090,
   },
   {
     name: "Docker Registry",
@@ -84,7 +79,6 @@ const SERVICES: Service[] = [
     description: "Local image storage",
     status: "unknown",
     internal: true,
-    port: 5000,
   },
 ];
 
@@ -263,7 +257,6 @@ function App() {
                 </div>
               </div>
               <div className="service-meta">
-                <span className="service-port">:{service.port}</span>
                 {service.url !== "/" && (
                   <a
                     href={service.url}
