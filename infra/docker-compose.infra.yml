@@ -60,6 +60,32 @@ services:
     networks:
       - infra-net
 
+  # --- Carbon Engine ---
+
+  carbon-engine:
+    container_name: greencloud-carbon
+    build:
+      context: ../services/carbon-engine
+    restart: unless-stopped
+    environment:
+      CARBON_ELECTRICITY_MAPS_API_KEY: ${ELECTRICITY_MAPS_API_KEY:-}
+      CARBON_ELECTRICITY_MAPS_ZONE: ${CARBON_ZONE:-GB}
+      CARBON_CARBON_THRESHOLD_LOW: ${CARBON_THRESHOLD_LOW:-100}
+      CARBON_CARBON_THRESHOLD_HIGH: ${CARBON_THRESHOLD_HIGH:-300}
+      CARBON_PI_IDLE_WATTS: ${PI_IDLE_WATTS:-4}
+      CARBON_PI_MAX_WATTS: ${PI_MAX_WATTS:-12}
+    volumes:
+      - carbon-data:/app/data
+    ports:
+      - "8002:8000"
+    networks:
+      - infra-net
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
   # --- Observability Stack ---
 
   prometheus:
@@ -168,6 +194,7 @@ services:
 volumes:
   registry-data:
   greencloud-api-data:
+  carbon-data:
   prometheus-data:
   loki-data:
   grafana-data:

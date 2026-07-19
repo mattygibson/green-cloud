@@ -1,58 +1,157 @@
 {
-  "annotations": {
-    "list": []
-  },
+  "annotations": { "list": [] },
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "links": [],
   "panels": [
     {
-      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
-      "id": 1,
-      "title": "Sustainability Dashboard",
-      "type": "text",
-      "options": {
-        "mode": "markdown",
-        "content": "## Carbon Awareness\n\nThis dashboard will display carbon intensity, energy usage, and emissions data once the Carbon Engine (Task 8) is implemented.\n\n**Planned panels:**\n- Current grid carbon intensity (gCO2/kWh)\n- Energy usage over time (Wh)\n- Cumulative emissions (gCO2)\n- Carbon-aware scheduling status\n- Deployment emissions per build"
-      }
-    },
-    {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
-        "defaults": { "unit": "percent" },
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 100 },
+              { "color": "red", "value": 300 }
+            ]
+          },
+          "unit": "gCO2/kWh"
+        },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
-      "id": 2,
-      "title": "System Power Proxy — CPU Usage",
-      "description": "CPU usage as a proxy for power consumption until real power monitoring is available",
-      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Grid Carbon Intensity",
+      "type": "gauge",
       "targets": [
         {
-          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
-          "legendFormat": "CPU %"
+          "expr": "greencloud_carbon_intensity_gco2_per_kwh",
+          "legendFormat": "{{ zone }}"
         }
       ]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
-        "defaults": { "unit": "bytes" },
+        "defaults": { "unit": "short" },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "id": 2,
+      "title": "Carbon Status",
+      "description": "0=Low (green), 1=Medium (amber), 2=High (red)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "greencloud_carbon_status",
+          "legendFormat": "Status"
+        }
+      ],
+      "options": {
+        "colorMode": "background"
+      }
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "watt" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
       "id": 3,
-      "title": "Network I/O (proxy for activity)",
+      "title": "Power Draw",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(greencloud_power_watts)",
+          "legendFormat": "Total"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "gCO2/kWh" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 4,
+      "title": "Carbon Intensity Timeline",
       "type": "timeseries",
       "targets": [
         {
-          "expr": "rate(node_network_receive_bytes_total{device!=\"lo\"}[5m])",
-          "legendFormat": "RX {{ device }}"
-        },
+          "expr": "greencloud_carbon_intensity_gco2_per_kwh",
+          "legendFormat": "{{ zone }}"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "watt" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 5,
+      "title": "Power Usage by Node",
+      "type": "timeseries",
+      "targets": [
         {
-          "expr": "rate(node_network_transmit_bytes_total{device!=\"lo\"}[5m])",
-          "legendFormat": "TX {{ device }}"
+          "expr": "greencloud_power_watts",
+          "legendFormat": "{{ node }}"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 16 },
+      "id": 6,
+      "title": "Total Emissions (gCO2)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "greencloud_emissions_gco2_total",
+          "legendFormat": "Total"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 16 },
+      "id": 7,
+      "title": "Emissions Today (gCO2)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "greencloud_emissions_gco2_today",
+          "legendFormat": "Today"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 16 },
+      "id": 8,
+      "title": "Builds Deferred",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "greencloud_builds_deferred_total",
+          "legendFormat": "Deferred"
         }
       ]
     }
@@ -63,5 +162,5 @@
   "time": { "from": "now-24h", "to": "now" },
   "title": "GreenCloud Sustainability",
   "uid": "greencloud-sustainability",
-  "version": 1
+  "version": 2
 }
