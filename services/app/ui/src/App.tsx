@@ -10,6 +10,7 @@ interface Service {
   name: string;
   url: string;
   description: string;
+  healthUrl: string;
   status: "healthy" | "unhealthy" | "unknown";
   port: number;
 }
@@ -42,6 +43,7 @@ const SERVICES: Service[] = [
   {
     name: "GreenCloud API",
     url: "https://api.green-cloud.uk/docs",
+    healthUrl: "https://api.green-cloud.uk/health",
     description: "Deployment management and webhooks",
     status: "unknown",
     port: 8000,
@@ -49,6 +51,7 @@ const SERVICES: Service[] = [
   {
     name: "Carbon Engine",
     url: "https://carbon.green-cloud.uk/docs",
+    healthUrl: "https://carbon.green-cloud.uk/health",
     description: "Carbon intensity and emissions tracking",
     status: "unknown",
     port: 8002,
@@ -56,6 +59,7 @@ const SERVICES: Service[] = [
   {
     name: "Grafana",
     url: "https://grafana.green-cloud.uk",
+    healthUrl: "https://grafana.green-cloud.uk/api/health",
     description: "Metrics dashboards and log viewer",
     status: "unknown",
     port: 3000,
@@ -63,6 +67,7 @@ const SERVICES: Service[] = [
   {
     name: "Prometheus",
     url: "/",
+    healthUrl: "",
     description: "Metrics collection and alerting",
     status: "unknown",
     port: 9090,
@@ -70,6 +75,7 @@ const SERVICES: Service[] = [
   {
     name: "Docker Registry",
     url: "/",
+    healthUrl: "",
     description: "Local image storage",
     status: "unknown",
     port: 5000,
@@ -118,6 +124,7 @@ function App() {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [carbon, setCarbon] = useState<CarbonStatus | null>(null);
+  const [services, setServices] = useState<Service[]>(SERVICES);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -145,7 +152,30 @@ function App() {
       .then((res) => res.json())
       .then((data: CarbonStatus) => setCarbon(data))
       .catch(() => {});
+
+    // Check health of each service
+    SERVICES.forEach((service, index) => {
+      if (!service.healthUrl) return;
+      fetch(service.healthUrl, { mode: "no-cors" })
+        .then(() => {
+          setServices((prev) => {
+            const updated = [...prev];
+            updated[index] = { ...updated[index], status: "healthy" };
+            return updated;
+          });
+        })
+        .catch(() => {
+          setServices((prev) => {
+            const updated = [...prev];
+            updated[index] = { ...updated[index], status: "unhealthy" };
+            return updated;
+          });
+        });
+    });
   }, []);
+
+  const healthyCount = services.filter((s) => s.status === "healthy").length;
+  const checkableCount = services.filter((s) => s.healthUrl).length;
 
   return (
     <div className="dashboard">
@@ -166,6 +196,12 @@ function App() {
             <div className="stat-value">
               <StatusDot status={health?.status || "unknown"} />
               {health?.status?.toUpperCase() || "CHECKING"}
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Services</div>
+            <div className="stat-value">
+              {healthyCount}/{checkableCount} healthy
             </div>
           </div>
           <div className="stat-card">
@@ -205,11 +241,14 @@ function App() {
       <section className="section">
         <h2>Deployed Services</h2>
         <div className="services-list">
-          {SERVICES.map((service) => (
+          {services.map((service) => (
             <div key={service.name} className="service-row">
               <div className="service-info">
-                <div className="service-name">{service.name}</div>
-                <div className="service-desc">{service.description}</div>
+                <StatusDot status={service.healthUrl ? service.status : "unknown"} />
+                <div>
+                  <div className="service-name">{service.name}</div>
+                  <div className="service-desc">{service.description}</div>
+                </div>
               </div>
               <div className="service-meta">
                 <span className="service-port">:{service.port}</span>
