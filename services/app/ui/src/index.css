@@ -241,3 +241,21 @@ body {
 .footer a:hover {
   text-decoration: underline;
 }
+
+/* User App Badge */
+.app-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #48c78e;
+  background: rgba(72, 199, 142, 0.15);
+  border: 1px solid rgba(72, 199, 142, 0.3);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.app-row {
+  border-color: rgba(72, 199, 142, 0.2);
+}
