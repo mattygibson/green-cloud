@@ -1,4 +1,4 @@
-.PHONY: prod-up prod-down dev-up dev-down infra-up infra-down logs-prod logs-dev logs-infra build-push clean streaming-up streaming-down logs-streaming
+.PHONY: prod-up prod-down dev-up dev-down infra-up infra-down logs-prod logs-dev logs-infra build-push clean
 
 # Infrastructure (registry, monitoring — always running)
 infra-up:
@@ -40,13 +40,3 @@ clean:
 	docker compose -f infra/docker-compose.prod.yml down -v
 	docker compose -f infra/docker-compose.dev.yml down -v
 	docker compose -f infra/docker-compose.infra.yml down -v
-
-# Streaming Relay (Neko virtual browser)
-streaming-up:
-	docker compose -f infra/docker-compose.streaming-relay.yml up -d
-
-streaming-down:
-	docker compose -f infra/docker-compose.streaming-relay.yml down
-
-logs-streaming:
-	docker compose -f infra/docker-compose.streaming-relay.yml logs -f
